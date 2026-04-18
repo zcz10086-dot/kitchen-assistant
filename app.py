@@ -28,9 +28,18 @@ try:
     AUDIO_ENABLED = True
 except ImportError as e:
     print(f"完整音频功能不可用：{e}")
-    AUDIO_ENABLED = False
-    voice_assistant = None
-    tts_engine = None
+    # 使用云端环境专用的语音助手
+    try:
+        from modules.voice_assistant_cloud import VoiceAssistantCloud
+        voice_assistant = VoiceAssistantCloud()
+        tts_engine = None
+        AUDIO_ENABLED = False
+        print("使用云端环境专用的语音助手")
+    except ImportError:
+        print("云端语音助手也不可用")
+        AUDIO_ENABLED = False
+        voice_assistant = None
+        tts_engine = None
 
 # 页面配置
 st.set_page_config(
@@ -303,51 +312,65 @@ def render_recipe_recommendation():
                     for tip in recipe['tips']:
                         st.write(f"💡 {tip}")
 
-# 语音助手Tab - 使用真正的AI语音功能（中文优化）
+# 语音助手Tab - 适配云环境的AI语音助手
 def render_voice_assistant():
     st.header("🎤 AI语音助手（中文支持）")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("🗣️ 中文语音控制")
+        st.subheader("🗣️ 中文语音/文本控制")
         
-        # 录音设置
-        duration = st.slider("录音时长(秒)", 1, 10, 5)
-        
-        # 语音反馈开关
-        enable_feedback = st.checkbox("启用语音反馈", value=True)
-        
-        if st.button("🎙️ 开始录音（中文）", use_container_width=True):
-            if not AUDIO_ENABLED:
-                st.error("❌ 音频功能不可用")
-            else:
+        if not AUDIO_ENABLED:
+            st.warning("⚠️ 云端环境：音频功能受限，使用文本输入替代")
+            
+            # 文本输入替代语音输入
+            text_input = st.text_area("📝 输入中文语音命令（云端环境使用）", 
+                                    placeholder="例如：下一步、暂停、查看步骤等",
+                                    height=100)
+            
+            if st.button("🚀 执行命令", use_container_width=True):
+                if text_input.strip():
+                    st.success(f"✅ 输入命令: {text_input}")
+                    
+                    # 使用AI识别命令（即使没有音频功能，命令识别逻辑仍然可用）
+                    if voice_assistant:
+                        command_result = voice_assistant.recognize_chinese_commands(text_input)
+                    else:
+                        # 简单的命令识别逻辑（备用方案）
+                        command_result = recognize_commands_fallback(text_input)
+                    
+                    if command_result["command"] != "unknown":
+                        st.info(f"🎯 识别命令: {command_result['command']}")
+                        process_voice_command(text_input)
+                    else:
+                        st.warning("⚠️ 未识别到有效命令，请尝试以下标准命令")
+                else:
+                    st.error("❌ 请输入命令文本")
+        else:
+            # 本地环境的语音功能
+            st.subheader("🗣️ 中文语音控制")
+            duration = st.slider("录音时长(秒)", 1, 10, 5)
+            enable_feedback = st.checkbox("启用语音反馈", value=True)
+            
+            if st.button("🎙️ 开始录音（中文）", use_container_width=True):
                 with st.spinner(f"录音中... ({duration}秒)"):
                     try:
-                        # 使用AI语音识别（中文优化）
                         recognized_text = voice_assistant.record_and_recognize(duration, language="zh-CN")
                         
-                        # 加强API调用结果检查
                         if recognized_text:
-                            # 检查是否是错误信息
                             if "语音识别失败" in recognized_text or "语音识别异常" in recognized_text:
                                 st.error("❌ 语音识别失败")
                                 st.info(f"错误信息: {recognized_text}")
                             else:
                                 st.success(f"✅ 识别结果: {recognized_text}")
-                                
-                                # 识别中文语音命令
                                 command_result = voice_assistant.recognize_chinese_commands(recognized_text)
                                 
-                                # 显示命令识别结果
                                 if command_result["command"] != "unknown":
                                     st.info(f"🎯 识别命令: {command_result['command']} (置信度: {command_result['confidence']:.1f})")
-                                    
-                                    # 提供中文语音反馈
                                     if enable_feedback:
                                         voice_assistant.provide_chinese_feedback(command_result)
                                 
-                                # 处理语音命令
                                 process_voice_command(recognized_text)
                         else:
                             st.error("❌ 识别失败，请检查麦克风权限或网络连接")
@@ -789,10 +812,52 @@ def render_nutrition_analysis():
             st.info("📝 暂无烹饪记录")
 
 # 语音命令处理（中文优化）
+def recognize_commands_fallback(text: str):
+    """备用命令识别函数（当语音助手不可用时使用）"""
+    if not text:
+        return {"command": "unknown", "original_text": "", "confidence": 0.0}
+    
+    commands = {
+        "下一步": "next_step",
+        "暂停": "pause", 
+        "继续": "continue",
+        "重新开始": "restart",
+        "加时间": "add_time",
+        "减时间": "reduce_time",
+        "查看步骤": "view_steps",
+        "查看营养": "view_nutrition",
+        "帮助": "help",
+        "退出": "exit"
+    }
+    
+    # 中文命令精确匹配
+    for chinese_cmd, english_cmd in commands.items():
+        if chinese_cmd in text:
+            return {
+                "command": english_cmd,
+                "original_text": text,
+                "confidence": 0.9
+            }
+    
+    # 模糊匹配
+    for chinese_cmd, english_cmd in commands.items():
+        if any(word in text for word in chinese_cmd):
+            return {
+                "command": english_cmd,
+                "original_text": text,
+                "confidence": 0.7
+            }
+    
+    return {"command": "unknown", "original_text": text, "confidence": 0.0}
+
 def process_voice_command(text: str):
     """处理语音命令（支持中文）"""
-    # 使用语音助手的中文命令识别功能
-    command_result = voice_assistant.recognize_chinese_commands(text)
+    # 使用语音助手的中文命令识别功能（如果可用）
+    if voice_assistant:
+        command_result = voice_assistant.recognize_chinese_commands(text)
+    else:
+        # 使用备用识别函数
+        command_result = recognize_commands_fallback(text)
     
     if command_result["command"] != "unknown":
         command = command_result["command"]
