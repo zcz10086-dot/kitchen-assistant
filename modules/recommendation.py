@@ -5,11 +5,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .zhipu_client import ZhipuClient
 
 class RecipeRecommender:
-    """食谱推荐系统（GLM-4 + Embedding）"""
+    """食谱推荐系统（GLM-4 + AI智能推荐）"""
     
     def __init__(self):
         self.client = ZhipuClient()
-        # 示例食谱数据库
+        # 示例食谱数据库（作为备用）
         self.recipe_database = [
             {
                 "name": "番茄炒蛋",
@@ -26,159 +26,50 @@ class RecipeRecommender:
                 "cooking_time": "60分钟",
                 "calories": 450,
                 "category": "肉类"
-            },
-            {
-                "name": "清炒时蔬",
-                "ingredients": ["青菜", "蒜", "盐", "油"],
-                "difficulty": "简单", 
-                "cooking_time": "5分钟",
-                "calories": 80,
-                "category": "素菜"
-            },
-            {
-                "name": "酸辣汤",
-                "ingredients": ["豆腐", "木耳", "鸡蛋", "醋", "辣椒"],
-                "difficulty": "中等",
-                "cooking_time": "20分钟",
-                "calories": 120,
-                "category": "汤类"
             }
         ]
         
-    def get_recipe_embeddings(self) -> Dict[str, List[float]]:
-        """获取食谱的嵌入向量"""
-        recipe_texts = []
-        for recipe in self.recipe_database:
-            text = f"{recipe['name']} {', '.join(recipe['ingredients'])} {recipe['category']}"
-            recipe_texts.append(text)
-        
-        embeddings = []
-        for text in recipe_texts:
-            result = self.client.get_embedding(text)
-            if result["success"]:
-                embeddings.append(result["data"])
-            else:
-                # 如果获取嵌入失败，使用零向量
-                embeddings.append([0.0] * 1024)
-        
-        recipe_embeddings = {}
-        for i, recipe in enumerate(self.recipe_database):
-            recipe_embeddings[recipe['name']] = embeddings[i]
-            
-        return recipe_embeddings
-    
     def recommend_recipes(self, available_ingredients: List[str], 
+                         user_preferences: Dict[str, Any] = None,
                          max_recipes: int = 5) -> List[Dict[str, Any]]:
-        """基于可用食材推荐食谱"""
+        """基于食材和用户偏好使用AI推荐食谱"""
         try:
-            # 获取食材的嵌入向量
-            ingredient_embeddings = []
-            for ingredient in available_ingredients:
-                result = self.client.get_embedding(ingredient)
-                if result["success"]:
-                    ingredient_embeddings.append(result["data"])
+            # 构建AI提示词
+            diet_prefs = user_preferences.get('diet_preferences', []) if user_preferences else []
+            allergies = user_preferences.get('allergies', []) if user_preferences else []
+            spicy_level = user_preferences.get('spicy_level', '中等') if user_preferences else '中等'
+            cooking_skill = user_preferences.get('cooking_skill', '中级') if user_preferences else '中级'
             
-            # 计算食材向量的平均值
-            if ingredient_embeddings:
-                avg_ingredient_embedding = np.mean(ingredient_embeddings, axis=0)
-            else:
-                avg_ingredient_embedding = np.zeros(1024)  # 假设嵌入维度为1024
-            
-            # 获取食谱嵌入向量
-            recipe_embeddings = self.get_recipe_embeddings()
-            
-            # 计算相似度
-            similarities = {}
-            for recipe_name, recipe_embedding in recipe_embeddings.items():
-                similarity = cosine_similarity(
-                    [avg_ingredient_embedding], 
-                    [recipe_embedding]
-                )[0][0]
-                similarities[recipe_name] = similarity
-            
-            # 按相似度排序
-            sorted_recipes = sorted(similarities.items(), 
-                                  key=lambda x: x[1], reverse=True)
-            
-            # 返回推荐结果
-            recommendations = []
-            for recipe_name, similarity in sorted_recipes[:max_recipes]:
-                recipe = next((r for r in self.recipe_database 
-                             if r['name'] == recipe_name), None)
-                if recipe:
-                    recipe['similarity_score'] = float(similarity)
-                    recipe['missing_ingredients'] = [ing for ing in recipe['ingredients'] 
-                                                   if ing not in available_ingredients]
-                    recommendations.append(recipe)
-            
-            return recommendations
-            
-        except Exception as e:
-            raise Exception(f"Recipe recommendation failed: {str(e)}")
-    
-    def generate_custom_recipe(self, ingredients: List[str], 
-                              preferences: Dict[str, Any] = None) -> Dict[str, Any]:
-        """根据食材生成定制食谱"""
-        try:
             prompt = f"""
-            基于以下食材：{', '.join(ingredients)}，请生成一个详细的食谱。
+            请基于以下信息推荐合适的菜品：
             
-            如果提供了偏好信息：{preferences if preferences else '无特殊偏好'}，请考虑这些偏好。
+            **可用食材**: {', '.join(available_ingredients)}
+            **饮食偏好**: {', '.join(diet_prefs) if diet_prefs else '无特殊偏好'}
+            **忌口/过敏**: {', '.join(allergies) if allergies else '无'}
+            **辣度偏好**: {spicy_level}
+            **烹饪技能**: {cooking_skill}
             
-            请按照以下JSON格式返回：
+            请推荐{max_recipes}道菜品，并按照以下JSON格式返回：
             {{
-                "recipe_name": "食谱名称",
-                "ingredients": ["食材列表"],
-                "steps": ["烹饪步骤"],
-                "cooking_time": "烹饪时间",
-                "difficulty": "难度级别",
-                "tips": ["烹饪小贴士"]
+                "recommendations": [
+                    {{
+                        "name": "菜品名称",
+                        "ingredients": ["主要食材1", "主要食材2"],
+                        "cooking_steps": ["步骤1", "步骤2", "步骤3"],
+                        "cooking_time": "预计烹饪时间",
+                        "difficulty": "难度级别",
+                        "calories": 估算热量,
+                        "protein": "蛋白质含量",
+                        "carbs": "碳水化合物含量", 
+                        "fat": "脂肪含量",
+                        "description": "菜品描述",
+                        "tips": ["烹饪技巧1", "烹饪技巧2"]
+                    }}
+                ]
             }}
             """
             
-            result = self.client.chat(
-                messages=[{"role": "user", "content": prompt}],
-                model="glm-4",
-                temperature=0.8
-            )
-            
-            if result["success"]:
-                try:
-                    return json.loads(result["data"])
-                except:
-                    # 如果无法解析JSON，返回结构化数据
-                    return {
-                        "recipe_name": "AI生成食谱",
-                        "ingredients": ingredients,
-                        "steps": [result["data"]],
-                        "cooking_time": "未知",
-                        "difficulty": "未知",
-                        "tips": ["请根据实际情况调整"],
-                        "raw_response": result["data"]
-                    }
-            else:
-                raise Exception(f"Custom recipe generation failed: {result['error']}")
-                
-        except Exception as e:
-            raise Exception(f"Custom recipe generation failed: {str(e)}")
-    
-    def get_cooking_instructions(self, recipe_name: str) -> Dict[str, Any]:
-        """获取具体食谱的详细烹饪指导"""
-        try:
-            prompt = f"""
-            请为"{recipe_name}"提供详细的烹饪指导。
-            
-            请按照以下JSON格式返回：
-            {{
-                "recipe_name": "{recipe_name}",
-                "preparation": ["准备步骤"],
-                "cooking_steps": ["烹饪步骤"],
-                "key_points": ["关键要点"],
-                "common_mistakes": ["常见错误"],
-                "serving_suggestions": ["上菜建议"]
-            }}
-            """
-            
+            # 调用AI进行推荐
             result = self.client.chat(
                 messages=[{"role": "user", "content": prompt}],
                 model="glm-4",
@@ -187,22 +78,38 @@ class RecipeRecommender:
             
             if result["success"]:
                 try:
-                    return json.loads(result["data"])
-                except:
-                    return {
-                        "recipe_name": recipe_name,
-                        "preparation": [],
-                        "cooking_steps": [result["data"]],
-                        "key_points": [],
-                        "common_mistakes": [],
-                        "serving_suggestions": [],
-                        "raw_response": result["data"]
-                    }
+                    ai_response = json.loads(result["data"])
+                    recommendations = ai_response.get("recommendations", [])
+                    
+                    # 添加缺失食材信息
+                    for recipe in recommendations:
+                        recipe['missing_ingredients'] = [
+                            ing for ing in recipe.get('ingredients', [])
+                            if ing not in available_ingredients
+                        ]
+                    
+                    return recommendations
+                except Exception as json_error:
+                    print(f"JSON解析错误: {json_error}")
+                    # 返回友好的错误信息而不是静默失败
+                    return [{
+                        "name": "AI推荐解析失败",
+                        "ingredients": available_ingredients,
+                        "cooking_steps": ["抱歉，AI推荐解析出现问题，请重试"],
+                        "cooking_time": "未知",
+                        "difficulty": "未知",
+                        "calories": 0,
+                        "description": f"JSON解析错误: {json_error}",
+                        "tips": ["请检查网络连接或稍后重试"]
+                    }]
             else:
-                raise Exception(f"Cooking instructions failed: {result['error']}")
+                # AI调用失败时返回示例数据
+                return self.recipe_database[:max_recipes]
                 
         except Exception as e:
-            raise Exception(f"Cooking instructions failed: {str(e)}")
+            print(f"AI recipe recommendation error: {e}")
+            # 出错时返回示例数据
+            return self.recipe_database[:max_recipes]
 
-# 单例模式
-recipe_recommender = RecipeRecommender()
+# 单例模式（注释掉，避免循环导入）
+# recipe_recommender = RecipeRecommender()

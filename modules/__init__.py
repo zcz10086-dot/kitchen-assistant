@@ -2,6 +2,7 @@
 厨房助手模块包
 """
 
+# 直接导入类，避免循环导入问题
 from .zhipu_client import ZhipuClient
 from .image_recognition import ImageRecognition
 from .recommendation import RecipeRecommender

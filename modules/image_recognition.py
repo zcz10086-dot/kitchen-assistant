@@ -49,10 +49,22 @@ class ImageRecognition:
                         "raw_result": result["data"]
                     }
             else:
-                raise Exception(f"Image recognition failed: {result['error']}")
+                print(f"图像识别失败: {result['error']}")
+                return {
+                    "ingredients": [],
+                    "total_count": 0,
+                    "cooking_suggestions": [f"图像识别失败: {result['error']}"],
+                    "raw_result": f"图像识别失败: {result['error']}"
+                }
                 
         except Exception as e:
-            raise Exception(f"Image recognition failed: {str(e)}")
+            print(f"图像识别异常: {str(e)}")
+            return {
+                "ingredients": [],
+                "total_count": 0,
+                "cooking_suggestions": [f"图像识别异常: {str(e)}"],
+                "raw_result": f"图像识别异常: {str(e)}"
+            }
     
     def analyze_food_safety(self, image_data: bytes) -> Dict[str, Any]:
         """分析食品安全性"""

@@ -1,0 +1,120 @@
+# 🚨 为什么.gitignore文件很重要？
+# ===========================================
+# 1. 避免提交不必要的文件（如缓存、日志、临时文件）
+# 2. 保护敏感信息（如API密钥、密码）
+# 3. 减少仓库体积，提高推送速度
+# 4. 保持代码仓库的整洁和专业性
+# 5. 避免不同环境的配置文件冲突
+
+# Python
+# ===========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+# ===========================================
+*.manifest
+*.spec
+
+# Installer logs
+# ===========================================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+# ===========================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+# ===========================================
+# 重要：保护敏感的环境变量文件
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+# ===========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+# ===========================================
+.DS_Store
+Thumbs.db
+
+# Streamlit
+# ===========================================
+.streamlit/
+
+# Audio files (语音助手可能生成的临时文件)
+# ===========================================
+*.wav
+*.mp3
+*.ogg
+*.flac
+
+# Temporary files
+# ===========================================
+*.tmp
+*.temp
+*.log
+
+# Database files (如果项目使用数据库)
+# ===========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# 项目特定的忽略文件
+# ===========================================
+# 测试数据
+test_data/
+# 上传的图片文件（避免提交用户上传的内容）
+uploads/
+# 生成的报告文件
+reports/
+# 备份文件
+backup/
+*.bak
+
+# 重要提醒：
+# ===========================================
+# 1. 永远不要提交包含真实API密钥的.env文件
+# 2. 使用.env.example文件来提供配置模板
+# 3. 在README中说明如何配置环境变量
+# 4. 定期检查.gitignore是否完整覆盖所有需要忽略的文件

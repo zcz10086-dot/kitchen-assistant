@@ -55,10 +55,28 @@ class NutritionAnalyzer:
                         "raw_response": result["data"]
                     }
             else:
-                raise Exception(f"Nutrition analysis failed: {result['error']}")
+                print(f"营养分析失败: {result['error']}")
+                return {
+                    "total_calories": 0,
+                    "macronutrients": {},
+                    "micronutrients": {},
+                    "health_benefits": [f"营养分析失败: {result['error']}"],
+                    "dietary_recommendations": [],
+                    "allergy_warnings": [],
+                    "raw_response": f"营养分析失败: {result['error']}"
+                }
                 
         except Exception as e:
-            raise Exception(f"Nutrition analysis failed: {str(e)}")
+            print(f"营养分析异常: {str(e)}")
+            return {
+                "total_calories": 0,
+                "macronutrients": {},
+                "micronutrients": {},
+                "health_benefits": [f"营养分析异常: {str(e)}"],
+                "dietary_recommendations": [],
+                "allergy_warnings": [],
+                "raw_response": f"营养分析异常: {str(e)}"
+            }
     
     def calculate_daily_intake(self, meals: List[Dict[str, Any]], 
                               user_profile: Dict[str, Any] = None) -> Dict[str, Any]:
