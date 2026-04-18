@@ -160,16 +160,10 @@ def render_sidebar():
         
         st.divider()
         
-        # API设置
-        st.header("🔧 API设置")
-        api_key = st.text_input("智谱AI API密钥", type="password")
-        if api_key:
-            st.success("✅ API密钥已设置")
-        
         # 语音设置
         st.header("🎤 语音设置")
         enable_voice = st.checkbox("启用语音功能", value=True)
-        if enable_voice:
+        if enable_voice and tts_engine:
             voice_type = st.selectbox("语音类型", tts_engine.get_available_voices())
 
 # 食材识别Tab
