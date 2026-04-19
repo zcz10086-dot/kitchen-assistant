@@ -40,6 +40,13 @@ jobs:
         import sys
         sys.path.append('.')
         try:
+            # 测试基础依赖
+            import streamlit
+            print('✅ streamlit导入成功')
+            import zhipuai
+            print('✅ zhipuai导入成功')
+            
+            # 测试AI模块
             from modules.zhipu_client import ZhipuClient
             print('✅ zhipu_client模块导入成功')
             from modules.image_recognition import ImageRecognition
@@ -48,9 +55,16 @@ jobs:
             print('✅ recommendation模块导入成功')
             from modules.nutrition import NutritionAnalyzer
             print('✅ nutrition模块导入成功')
-            print('🎉 所有AI模块导入测试通过')
+            
+            # 测试语音模块（云端兼容版本）
+            from modules.voice_assistant_cloud_enhanced import VoiceAssistantCloudEnhanced
+            print('✅ voice_assistant_cloud_enhanced模块导入成功')
+            
+            print('🎉 所有模块导入测试通过')
         except Exception as e:
             print(f'❌ 模块导入失败: {e}')
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
         "
         
