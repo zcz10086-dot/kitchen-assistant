@@ -2,284 +2,202 @@
 
 基于智谱AI大模型的智能厨房助手，提供食材识别、食谱推荐、营养分析和中文语音交互等功能。
 
-## ✨ 最新功能特性
+## 🚀 一键部署
 
+[![Deploy to GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://github.com/zcz10086-dot/kitchen-assistant/deployments)
+[![Streamlit Cloud](https://img.shields.io/badge/Deploy-Streamlit%20Cloud-orange?style=for-the-badge&logo=streamlit)](https://share.streamlit.io/zcz10086-dot/kitchen-assistant)
+
+### 🌐 在线访问地址
+- **GitHub Pages**: https://zcz10086-dot.github.io/kitchen-assistant
+- **Streamlit Cloud**: https://share.streamlit.io/zcz10086-dot/kitchen-assistant
+
+## ✨ 核心功能特性
+
+### 🤖 AI智能功能（100%云端部署支持）
 - **📷 AI食材识别**: 使用GLM-4V模型智能识别图片中的食材
 - **🍽️ AI推荐菜品**: 基于可用食材和用户偏好使用GLM-4进行智能推荐
 - **📊 AI营养分析**: 使用GLM-4分析食材营养成分和热量
-- **🎤 中文语音助手**: 完美支持中文语音识别和语音合成（GLM-ASR-2512 + GLM-TTS）
+- **🎤 云端语音助手**: 支持TTS语音合成和文件上传语音识别
 - **👨‍🍳 AI实时指导**: 烹饪步骤实时指导
 - **📦 AI库存管理**: 智能食材库存分析
 - **🛒 智能购物清单**: 基于库存的购物建议
 
-## 🚀 项目亮点
+### ✅ 云端部署优势
+- **🌐 完全云端兼容**: 无需本地环境，100%云端运行
+- **🔊 云端音频支持**: TTS语音合成 + 文件上传语音识别
+- **🚀 自动部署**: GitHub Actions自动构建和部署
+- **💯 稳定可靠**: GitHub基础设施保障
 
-### ✅ 中文语音支持
-- **完美中文识别**: 智能中文语音识别，支持模糊匹配
-- **自然语音合成**: 流畅的中文语音播报
-- **中文命令系统**: 支持"下一步"、"暂停"、"继续"等中文语音命令
-- **智能语音反馈**: 实时中文语音反馈确认
-
-### ✅ AI智能功能
-- **真正的AI能力**: 所有功能都基于GLM-4系列模型实现
-- **智能推荐**: 基于用户偏好和食材的个性化推荐
-- **营养分析**: 专业的营养成分分析
-- **图像识别**: 准确的食材识别和分析
-
-## 📁 项目结构
+## 📁 项目结构（精简版）
 
 ```
 kitchen_assistant_zhipu/
-├── app.py                    # Streamlit主界面（优化版）
-├── requirements.txt          # 依赖包列表
-├── .env                      # 环境变量配置
-├── README.md                 # 项目说明文档（本文件）
-└── modules/
-    ├── __init__.py           # 模块包初始化
-    ├── zhipu_client.py       # 智谱AI统一客户端
-    ├── image_recognition.py  # 食材识别模块（GLM-4V）
-    ├── recommendation.py     # 推荐系统模块（GLM-4）
-    ├── nutrition.py          # 营养分析模块（GLM-4）
-    ├── voice_assistant.py    # 语音助手模块（中文优化）
-    └── tts_assistant.py      # 语音播报模块
+├── .github/workflows/        # GitHub Actions工作流
+│   └── deploy.yml            # 自动部署配置
+├── .streamlit/               # Streamlit配置
+│   └── config.toml           # 应用配置文件
+├── modules/                  # AI功能模块（核心）
+│   ├── zhipu_client.py       # 智谱AI统一客户端
+│   ├── image_recognition.py  # 食材识别模块（GLM-4V）
+│   ├── recommendation.py     # 推荐系统模块（GLM-4）
+│   ├── nutrition.py          # 营养分析模块（GLM-4）
+│   ├── voice_assistant.py    # 本地语音助手模块
+│   └── voice_assistant_cloud_enhanced.py # 云端语音助手（增强版）
+├── app.py                    # Streamlit主界面（云端优化版）
+├── requirements.txt          # 依赖包列表（部署优化）
+├── index.html                # GitHub Pages静态页面
+├── .env.example              # 环境变量配置示例
+└── README.md                 # 项目说明文档
 ```
 
-## 🛠️ 快速开始
+## 🚀 快速部署指南
 
-### 1. 环境准备
+### 方法一：GitHub Actions自动部署（推荐）
 
-确保您已安装Python 3.8+，然后克隆或下载本项目。
+1. **Fork或克隆仓库**
+   ```bash
+   git clone https://github.com/zcz10086-dot/kitchen-assistant.git
+   cd kitchen-assistant
+   ```
 
-### 2. 安装依赖
+2. **设置环境变量**（在GitHub仓库Settings → Secrets）
+   - `ZHIPU_API_KEY`: 您的智谱AI API密钥
+
+3. **推送到GitHub**
+   ```bash
+   git add .
+   git commit -m "初始化项目"
+   git push origin main
+   ```
+
+4. **自动部署**
+   - GitHub Actions会自动构建和部署
+   - 访问：https://yourusername.github.io/kitchen-assistant
+
+### 方法二：Streamlit Cloud部署
+
+1. **访问Streamlit Cloud**: https://share.streamlit.io
+2. **连接GitHub仓库**
+3. **选择分支和文件**: 选择main分支和app.py
+4. **设置环境变量**: 添加ZHIPU_API_KEY
+5. **部署完成**: 自动生成访问链接
+
+### 方法三：本地运行
 
 ```bash
-cd kitchen_assistant_zhipu
+# 1. 克隆仓库
+git clone https://github.com/zcz10086-dot/kitchen-assistant.git
+cd kitchen-assistant
+
+# 2. 安装依赖
 pip install -r requirements.txt
-```
 
-**主要依赖包：**
-- `streamlit` - 网页界面框架
-- `zhipuai` - 智谱AI SDK
-- `pillow` - 图像处理
-- `sounddevice` - 音频录制
-- `soundfile` - 音频文件处理
-- `pygame` - 音频播放
+# 3. 设置环境变量
+cp .env.example .env
+# 编辑.env文件，添加您的智谱AI API密钥
 
-### 3. 配置API密钥
-
-1. 获取智谱AI API密钥：访问 [智谱AI开放平台](https://open.bigmodel.cn/)
-2. 编辑 `.env` 文件，将您的API密钥填入：
-
-```env
-ZHIPU_API_KEY=your_actual_api_key_here
-```
-
-### 4. 启动应用
-
-```bash
+# 4. 运行应用
 streamlit run app.py
 ```
 
-应用将在本地启动，默认地址为：**http://localhost:8501**
+## 🔧 环境配置
 
-## 📖 详细使用说明
+### 1. 获取智谱AI API密钥
+1. 访问智谱AI开放平台：https://open.bigmodel.cn/
+2. 注册账号并创建API密钥
+3. 复制您的API密钥
 
-### 📷 AI食材识别
+### 2. 设置环境变量
 
-1. 点击"📷 AI食材识别"标签
-2. 上传包含食材的图片（支持PNG、JPG、JPEG格式）
-3. 点击"开始识别食材"按钮
-4. 系统将使用GLM-4V模型识别食材并提供：
-   - ✅ 食材清单和数量估计
-   - ✅ 新鲜度评估
-   - ✅ 烹饪建议
-   - ✅ 食品安全分析
-   - ✅ 热量估算
+**本地运行**：创建`.env`文件
+```bash
+ZHIPU_API_KEY=your_zhipuai_api_key_here
+```
 
-### 🍽️ AI推荐菜品
+**云端部署**：在部署平台设置环境变量
+- GitHub Pages: 仓库Settings → Secrets
+- Streamlit Cloud: 应用设置 → Secrets
 
-1. 点击"🍽️ AI推荐菜品"标签
-2. 输入可用食材（用逗号分隔）
-3. 设置用户偏好（饮食偏好、忌口、辣度等）
-4. 点击"AI智能推荐"按钮
-5. 系统将使用GLM-4模型提供：
-   - ✅ 个性化食谱推荐
-   - ✅ 详细烹饪步骤
-   - ✅ 营养信息
-   - ✅ 烹饪技巧
-   - ✅ 缺失食材提示
+## 🎯 功能使用说明
 
-### 🎤 AI语音助手（中文支持）
+### 1. 食材识别（GLM-4V）
+- 上传食材图片
+- AI自动识别食材种类和数量
+- 提供新鲜度评估和烹饪建议
 
-1. 点击"🎤 AI语音助手"标签
-2. 设置录音时长和启用语音反馈
-3. 点击"🎙️ 开始录音（中文）"按钮
-4. 说出中文语音命令，如：
-   - 🎯 **下一步** - 跳转到下一步
-   - ⏸️ **暂停** - 暂停计时器  
-   - ▶️ **继续** - 继续烹饪
-   - 🔄 **重新开始** - 重新开始流程
-   - ⏰ **加时间** - 增加5分钟
-   - ⏰ **减时间** - 减少5分钟
-   - 📋 **查看步骤** - 显示烹饪步骤
-   - 📊 **查看营养** - 显示营养信息
-   - 💡 **帮助** - 获取帮助信息
-   - 👋 **退出** - 退出语音助手
+### 2. 智能推荐（GLM-4）
+- 基于可用食材推荐菜品
+- 考虑用户饮食偏好和忌口
+- 提供详细烹饪步骤和营养信息
 
-### 👨‍🍳 AI实时指导
+### 3. 营养分析（GLM-4）
+- 分析食材营养成分
+- 计算总卡路里和营养比例
+- 提供健康饮食建议
 
-1. 点击"👨‍🍳 AI实时指导"标签
-2. 选择或输入要烹饪的菜品
-3. 系统将提供：
-   - ✅ 分步骤指导
-   - ✅ 语音播报指导
-   - ✅ 计时器功能
-   - ✅ 进度跟踪
-
-### 📦 AI库存管理
-
-1. 点击"📦 AI库存管理"标签
-2. 输入当前库存食材
-3. 系统将提供：
-   - ✅ 库存分析
-   - ✅ 食材过期提醒
-   - ✅ 使用建议
-   - ✅ 采购建议
-
-### 🛒 智能购物清单
-
-1. 点击"🛒 智能购物清单"标签
-2. 基于库存和食谱推荐
-3. 系统将提供：
-   - ✅ 智能购物建议
-   - ✅ 价格估算
-   - ✅ 购买优先级
-
-### 📊 AI营养分析
-
-1. 点击"📊 AI营养分析"标签
-2. 输入食材清单或选择已识别食材
-3. 点击"AI详细分析"按钮
-4. 系统将使用GLM-4模型提供：
-   - ✅ 营养成分分析
-   - ✅ 热量计算
-   - ✅ 健康益处
-   - ✅ 饮食建议
-   - ✅ 7天饮食计划
-
-## 🎯 中文语音命令系统
-
-### 支持的中文命令
-
-| 中文命令 | 功能说明 | 英文命令 |
-|---------|---------|---------|
-| **下一步** | 跳转到下一步骤 | next_step |
-| **暂停** | 暂停计时器 | pause |
-| **继续** | 继续烹饪 | continue |
-| **重新开始** | 重新开始流程 | restart |
-| **加时间** | 增加5分钟 | add_time |
-| **减时间** | 减少5分钟 | reduce_time |
-| **查看步骤** | 显示烹饪步骤 | view_steps |
-| **查看营养** | 显示营养信息 | view_nutrition |
-| **帮助** | 获取帮助信息 | help |
-| **退出** | 退出语音助手 | exit |
-
-### 语音反馈示例
-
-- 🗣️ "好的，正在为您跳转到下一步"
-- 🗣️ "已暂停，请说'继续'来恢复"
-- 🗣️ "好的，继续烹饪"
-- 🗣️ "正在重新开始烹饪流程"
-- 🗣️ "已为您增加时间"
-- 🗣️ "抱歉，我没有听懂您的指令，请再说一遍"
+### 4. 云端语音助手
+- **TTS语音合成**: 文本转语音，支持中文
+- **文件上传语音识别**: 上传音频文件进行识别
+- **中文命令识别**: 支持"下一步"、"暂停"等命令
 
 ## 🔧 技术架构
 
-### AI模型使用
+### 前端技术栈
+- **Streamlit**: Web应用框架
+- **HTML5/CSS**: 用户界面
+- **JavaScript**: 前端交互
 
-| 功能 | AI模型 | 说明 |
-|------|--------|------|
-| **食材识别** | GLM-4V | 多模态图像理解 |
-| **食谱推荐** | GLM-4 | 智能对话和推荐 |
-| **营养分析** | GLM-4 | 专业营养分析 |
-| **语音识别** | GLM-ASR-2512 | 中文语音转文字 |
-| **语音合成** | GLM-TTS | 中文文字转语音 |
+### 后端技术栈
+- **Python 3.10+**: 主要编程语言
+- **智谱AI API**: GLM-4系列模型
+- **GitHub Actions**: CI/CD自动化
 
-### 模块说明
+### 部署平台
+- **GitHub Pages**: 静态网站托管
+- **Streamlit Cloud**: 应用托管服务
 
-#### ZhipuClient
-- 统一的智谱AI API客户端封装
-- 支持所有智谱AI服务
-- 完善的错误处理和超时控制
+## 🐛 故障排除
 
-#### ImageRecognition（GLM-4V）
-- 食材识别和分类
-- 食品安全分析
-- 热量估算
+### 常见问题
 
-#### RecipeRecommender（GLM-4）
-- 基于AI的个性化推荐
-- 智能食谱生成
-- 用户偏好匹配
+**Q: 部署失败怎么办？**
+A: 检查requirements.txt是否包含不兼容的依赖包
 
-#### NutritionAnalyzer（GLM-4）
-- 营养成分分析
-- 饮食计划制定
-- 食物搭配建议
+**Q: AI功能无法使用？**
+A: 确保已正确设置ZHIPU_API_KEY环境变量
 
-#### VoiceAssistant（中文优化）
-- 中文语音录制和识别
-- 中文语音命令分析
-- 智能语音反馈
+**Q: 音频功能不可用？**
+A: 云端环境使用文件上传方式替代实时录音
 
-#### TTSEngine
-- 中文文本转语音
-- 自然语音播报
-- 音频播放控制
+**Q: 如何更新应用？**
+A: 推送代码到GitHub，GitHub Actions会自动重新部署
 
-## 🐛 常见问题
+### 调试技巧
+1. 查看GitHub Actions日志
+2. 检查环境变量设置
+3. 验证API密钥有效性
+4. 查看浏览器控制台错误信息
 
-### Q: 语音功能无法使用怎么办？
-A: 请检查是否安装了音频相关依赖包：
-```bash
-pip install sounddevice soundfile pydub pygame
-```
+## 🤝 贡献指南
 
-### Q: API调用失败怎么办？
-A: 请检查：
-1. API密钥是否正确配置
-2. 网络连接是否正常
-3. API调用额度是否充足
+欢迎贡献代码！请遵循以下步骤：
 
-### Q: 如何优化中文语音识别准确率？
-A: 建议：
-1. 在安静环境下录音
-2. 发音清晰标准
-3. 适当延长录音时间
-4. 使用常见的中文命令词汇
+1. Fork本项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建Pull Request
 
-### Q: 程序启动时出现导入错误？
-A: 请确保所有依赖包已正确安装：
-```bash
-pip install -r requirements.txt
-```
+## 📄 许可证
 
-## 📞 技术支持
+本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-如果您在使用过程中遇到问题，请：
+## 🙏 致谢
 
-1. 检查本README文档中的常见问题部分
-2. 确保所有依赖包已正确安装
-3. 验证API密钥配置是否正确
-4. 检查网络连接是否正常
+- **智谱AI**: 提供强大的AI模型支持
+- **Streamlit**: 优秀的Web应用框架
+- **GitHub**: 免费的代码托管和部署服务
 
-## 🎉 开始使用吧！
+---
 
-现在您可以启动智能厨房助手，体验完整的AI厨房助手功能：
-
-```bash
-cd kitchen_assistant_zhipu
-streamlit run app.py
-```
-
-**享受智能烹饪的乐趣！** 🍳👨‍🍳
+**🍳 智能厨房助手** - 让AI助力您的烹饪体验！

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能厨房助手 - GitHub Pages</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 20px;
+        }
+        .logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 30px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .links {
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🍳</div>
+        <h1>智能厨房助手</h1>
+        <p>基于智谱AI的智能厨房助手应用</p>
+        
+        <div class="loading"></div>
+        <p>正在准备启动应用...</p>
+        
+        <div class="info-box">
+            <h3>🚀 部署信息</h3>
+            <p>✅ 应用已成功部署到 GitHub Pages</p>
+            <p>🌐 访问地址: <code>https://zcz10086-dot.github.io/kitchen-assistant</code></p>
+            <p>🔧 技术栈: Streamlit + 智谱AI API</p>
+        </div>
+        
+        <div class="links">
+            <a href="https://share.streamlit.io/zcz10086-dot/kitchen-assistant" class="btn">🎯 启动完整应用</a>
+            <a href="https://github.com/zcz10086-dot/kitchen-assistant" class="btn">📁 GitHub仓库</a>
+        </div>
+    </div>
+    
+    <script>
+        // 5秒后自动跳转到Streamlit Cloud应用
+        setTimeout(function() {
+            window.location.href = 'https://share.streamlit.io/zcz10086-dot/kitchen-assistant';
+        }, 5000);
+        
+        // 显示倒计时
+        let countdown = 5;
+        const countdownElement = document.createElement('p');
+        countdownElement.innerHTML = `将在 <strong>${countdown}</strong> 秒后自动跳转...`;
+        document.querySelector('.container').appendChild(countdownElement);
+        
+        const countdownInterval = setInterval(function() {
+            countdown--;
+            countdownElement.innerHTML = `将在 <strong>${countdown}</strong> 秒后自动跳转...`;
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

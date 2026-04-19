@@ -1,5 +1,24 @@
-streamlit==1.28.0
-Pillow==10.0.0
-python-dotenv==1.0.0
-requests==2.31.0
-numpy==1.24.0
+# 部署优化版本 - Streamlit Cloud兼容（支持云端音频功能）
+streamlit>=1.28.0
+zhipuai>=2.0.0
+Pillow>=10.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# 音频处理依赖（云端兼容）
+librosa>=0.10.0        # 音频分析（纯Python实现）
+audioread>=3.0.0       # 音频文件读取（云端兼容）
+
+# 必要的异步依赖
+sniffio>=1.3.0
+anyio>=4.0.0
+httpx>=0.25.0
+
+# 移除系统级音频依赖（Streamlit Cloud不支持）：
+# sounddevice>=0.4.6  # 需要系统音频驱动（移除）
+# soundfile>=0.12.0   # 依赖libsndfile（移除）
+# pydub>=0.25.1       # 依赖ffmpeg（移除）
+# pygame>=2.5.0       # 需要图形界面和音频（移除）

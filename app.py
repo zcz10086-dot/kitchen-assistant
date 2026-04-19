@@ -5,7 +5,16 @@ import json
 import tempfile
 import time
 import threading
+import os
 from PIL import Image
+
+# 云端环境检测
+IS_CLOUD_DEPLOYMENT = os.getenv('GITHUB_ACTIONS') or os.getenv('STREAMLIT_CLOUD') or os.getenv('GITHUB_PAGES')
+if IS_CLOUD_DEPLOYMENT:
+    print("🌐 检测到云端部署环境 - 优化音频功能")
+    CLOUD_MODE = True
+else:
+    CLOUD_MODE = False
 
 # 基础导入（确保应用能启动）
 zhipu_client = None
@@ -34,27 +43,52 @@ except ImportError as e:
     print("💡 应用将以基础模式运行")
     AI_ENABLED = False
 
-# 音频功能依赖检查
-try:
-    from modules.voice_assistant import VoiceAssistant
-    from modules.tts_assistant import TTSEngine
-    voice_assistant = VoiceAssistant()
-    tts_engine = TTSEngine()
-    AUDIO_ENABLED = True
-except ImportError as e:
-    print(f"完整音频功能不可用：{e}")
-    # 使用云端环境专用的语音助手
+# 音频功能依赖检查 - 云端环境优化
+if CLOUD_MODE:
+    # 云端环境：优先使用增强版云端语音助手
     try:
-        from modules.voice_assistant_cloud import VoiceAssistantCloud
-        voice_assistant = VoiceAssistantCloud()
+        from modules.voice_assistant_cloud_enhanced import VoiceAssistantCloudEnhanced
+        voice_assistant = VoiceAssistantCloudEnhanced(zhipu_client)
         tts_engine = None
-        AUDIO_ENABLED = False
-        print("使用云端环境专用的语音助手")
-    except ImportError:
-        print("云端语音助手也不可用")
-        AUDIO_ENABLED = False
-        voice_assistant = None
-        tts_engine = None
+        AUDIO_ENABLED = True  # 云端环境也支持音频功能
+        print("🌐 云端环境：使用增强版云端语音助手（支持TTS和文件上传ASR）")
+    except ImportError as e:
+        print(f"增强版云端语音助手不可用：{e}")
+        # 回退到基础版云端语音助手
+        try:
+            from modules.voice_assistant_cloud import VoiceAssistantCloud
+            voice_assistant = VoiceAssistantCloud()
+            tts_engine = None
+            AUDIO_ENABLED = False
+            print("🌐 云端环境：使用基础版云端语音助手")
+        except ImportError as e:
+            print(f"云端语音助手不可用：{e}")
+            AUDIO_ENABLED = False
+            voice_assistant = None
+            tts_engine = None
+else:
+    # 本地环境：尝试使用完整音频功能
+    try:
+        from modules.voice_assistant import VoiceAssistant
+        from modules.tts_assistant import TTSEngine
+        voice_assistant = VoiceAssistant()
+        tts_engine = TTSEngine()
+        AUDIO_ENABLED = True
+        print("🔊 本地环境：音频功能已启用")
+    except ImportError as e:
+        print(f"完整音频功能不可用：{e}")
+        # 使用云端环境专用的语音助手
+        try:
+            from modules.voice_assistant_cloud import VoiceAssistantCloud
+            voice_assistant = VoiceAssistantCloud()
+            tts_engine = None
+            AUDIO_ENABLED = False
+            print("使用云端环境专用的语音助手")
+        except ImportError:
+            print("云端语音助手也不可用")
+            AUDIO_ENABLED = False
+            voice_assistant = None
+            tts_engine = None
 
 # 页面配置
 st.set_page_config(
@@ -444,40 +478,111 @@ def render_recipe_recommendation():
 def render_voice_assistant():
     st.header("🎤 AI语音助手（中文支持）")
     
+    # 云端环境音频功能状态显示
+    if CLOUD_MODE and AUDIO_ENABLED:
+        st.success("✅ 云端环境：支持TTS语音合成和文件上传语音识别")
+    elif CLOUD_MODE:
+        st.warning("⚠️ 云端环境：音频功能受限，使用文本输入和文件上传")
+    
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("🗣️ 中文语音/文本控制")
+        # 云端环境音频功能
+        if CLOUD_MODE and AUDIO_ENABLED:
+            st.subheader("🗣️ 云端语音功能")
+            
+            # 文件上传语音识别
+            st.markdown("#### 📁 语音识别（文件上传）")
+            uploaded_file = st.file_uploader(
+                "上传音频文件", 
+                type=['wav', 'mp3', 'm4a'],
+                help="支持WAV、MP3、M4A格式，最大10MB"
+            )
+            
+            if uploaded_file is not None:
+                # 验证文件
+                if hasattr(voice_assistant, 'validate_audio_file'):
+                    validation_result = voice_assistant.validate_audio_file(uploaded_file)
+                    if not validation_result["valid"]:
+                        st.error(f"❌ {validation_result['error']}")
+                    else:
+                        st.success(f"✅ 文件验证通过：{validation_result['file_format']}格式，{validation_result['file_size']//1024}KB")
+                
+                if st.button("🔍 识别语音", use_container_width=True):
+                    with st.spinner("正在识别语音..."):
+                        if hasattr(voice_assistant, 'speech_to_text_file'):
+                            result = voice_assistant.speech_to_text_file(uploaded_file)
+                            
+                            if result["success"]:
+                                st.success(f"✅ 识别结果: {result['text']}")
+                                # 执行命令识别
+                                command_result = voice_assistant.recognize_chinese_commands(result['text'])
+                                st.info(f"🎯 识别命令: {command_result['command']}")
+                                process_voice_command(result['text'])
+                            else:
+                                st.error(f"❌ 识别失败: {result['error']}")
+                        else:
+                            st.error("❌ 当前语音助手不支持文件上传识别")
+            
+            # TTS语音合成
+            st.markdown("#### 🔊 语音合成（TTS）")
+            tts_text = st.text_area("输入要合成的文本", "欢迎使用智能厨房助手", height=80)
+            
+            if st.button("🎵 生成语音", use_container_width=True):
+                with st.spinner("正在生成语音..."):
+                    if hasattr(voice_assistant, 'text_to_speech'):
+                        result = voice_assistant.text_to_speech(tts_text)
+                        
+                        if result["success"]:
+                            st.success("✅ 语音生成成功")
+                            # 播放音频
+                            st.audio(result["audio_url"], format="audio/mpeg")
+                            
+                            # 显示音频信息
+                            st.info(f"音频数据大小: {len(result['audio_data'])//1024}KB")
+                        else:
+                            st.error(f"❌ 语音生成失败: {result['error']}")
+                    else:
+                        st.error("❌ 当前语音助手不支持TTS功能")
+            
+            st.markdown("---")
         
-        if not AUDIO_ENABLED:
-            st.warning("⚠️ 云端环境：音频功能受限，使用文本输入替代")
-            
-            # 文本输入替代语音输入
-            text_input = st.text_area("📝 输入中文语音命令（云端环境使用）", 
-                                    placeholder="例如：下一步、暂停、查看步骤等",
-                                    height=100)
-            
-            if st.button("🚀 执行命令", use_container_width=True):
-                if text_input.strip():
-                    st.success(f"✅ 输入命令: {text_input}")
-                    
-                    # 使用AI识别命令（即使没有音频功能，命令识别逻辑仍然可用）
-                    if voice_assistant:
-                        command_result = voice_assistant.recognize_chinese_commands(text_input)
-                    else:
-                        # 简单的命令识别逻辑（备用方案）
-                        command_result = recognize_commands_fallback(text_input)
-                    
-                    if command_result["command"] != "unknown":
-                        st.info(f"🎯 识别命令: {command_result['command']}")
-                        process_voice_command(text_input)
-                    else:
-                        st.warning("⚠️ 未识别到有效命令，请尝试以下标准命令")
+        # 文本输入控制（所有环境都支持）
+        st.subheader("⌨️ 文本输入控制")
+        text_input = st.text_area("📝 输入中文语音命令", 
+                                placeholder="例如：下一步、暂停、查看步骤等",
+                                height=100)
+        
+        if st.button("🚀 执行命令", use_container_width=True):
+            if text_input.strip():
+                st.success(f"✅ 输入命令: {text_input}")
+                
+                # 使用AI识别命令
+                if voice_assistant:
+                    command_result = voice_assistant.recognize_chinese_commands(text_input)
                 else:
-                    st.error("❌ 请输入命令文本")
-        else:
-            # 本地环境的语音功能
-            st.subheader("🗣️ 中文语音控制")
+                    # 简单的命令识别逻辑（备用方案）
+                    command_result = recognize_commands_fallback(text_input)
+                
+                if command_result["command"] != "unknown":
+                    st.info(f"🎯 识别命令: {command_result['command']}")
+                    process_voice_command(text_input)
+                    
+                    # 云端环境TTS反馈
+                    if CLOUD_MODE and AUDIO_ENABLED and hasattr(voice_assistant, 'text_to_speech'):
+                        feedback_text = voice_assistant.provide_chinese_feedback(command_result)
+                        tts_result = voice_assistant.text_to_speech(feedback_text)
+                        if tts_result["success"]:
+                            st.audio(tts_result["audio_url"], format="audio/mpeg")
+                else:
+                    st.warning("⚠️ 未识别到有效命令，请尝试以下标准命令")
+            else:
+                st.error("❌ 请输入命令文本")
+        
+        # 本地环境语音功能
+        if not CLOUD_MODE and AUDIO_ENABLED:
+            st.markdown("---")
+            st.subheader("🎙️ 本地语音控制")
             duration = st.slider("录音时长(秒)", 1, 10, 5)
             enable_feedback = st.checkbox("启用语音反馈", value=True)
             
