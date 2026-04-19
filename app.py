@@ -7,23 +7,18 @@ import time
 import threading
 from PIL import Image
 
-# 优化后的导入方式（带备用方案）
+# 基础导入（确保应用能启动）
+zhipu_client = None
+image_recognizer = None
+recipe_recommender = None
+nutrition_analyzer = None
+
+# 尝试导入AI模块（如果可用）
 try:
     from modules.zhipu_client import ZhipuClient
     zhipu_client = ZhipuClient()
-    print("使用标准zhipu客户端")
-except ImportError as e:
-    print(f"zhipuai库导入失败: {e}")
-    try:
-        from modules.zhipu_client_fallback import ZhipuClientFallback
-        zhipu_client = ZhipuClientFallback()
-        print("使用备用zhipu客户端")
-    except ImportError:
-        print("备用客户端也不可用")
-        zhipu_client = None
-
-# 初始化其他模块实例
-try:
+    print("✅ zhipuai库可用")
+    
     from modules.image_recognition import ImageRecognition
     from modules.recommendation import RecipeRecommender
     from modules.nutrition import NutritionAnalyzer
@@ -32,13 +27,12 @@ try:
     recipe_recommender = RecipeRecommender()
     nutrition_analyzer = NutritionAnalyzer()
     
-    print("所有AI模块初始化成功")
-except Exception as e:
-    print(f"部分AI模块初始化失败: {e}")
-    # 设置默认值
-    image_recognizer = None
-    recipe_recommender = None
-    nutrition_analyzer = None
+    print("✅ 所有AI模块初始化成功")
+    AI_ENABLED = True
+except ImportError as e:
+    print(f"⚠️ AI功能受限: {e}")
+    print("💡 应用将以基础模式运行")
+    AI_ENABLED = False
 
 # 音频功能依赖检查
 try:
@@ -193,6 +187,35 @@ def render_sidebar():
 def render_ingredient_recognition():
     st.header("📷 食材识别")
     
+    if not AI_ENABLED:
+        st.warning("⚠️ AI功能当前不可用")
+        st.info("💡 请手动输入食材清单")
+        
+        # 手动输入替代方案
+        manual_ingredients = st.text_area("手动输入食材清单（用逗号分隔）", 
+                                         placeholder="例如：西红柿,鸡蛋,洋葱,土豆")
+        
+        if st.button("分析食材", use_container_width=True):
+            if manual_ingredients.strip():
+                ingredients_list = [ing.strip() for ing in manual_ingredients.split(",") if ing.strip()]
+                
+                st.success(f"✅ 识别到 {len(ingredients_list)} 种食材")
+                
+                # 显示食材清单
+                st.subheader("📋 食材清单")
+                for i, ingredient in enumerate(ingredients_list, 1):
+                    st.write(f"{i}. {ingredient}")
+                
+                # 提供基础建议
+                st.subheader("💡 烹饪建议")
+                st.write("基于您输入的食材，建议尝试以下菜品：")
+                st.write("- 炒菜类：简单快炒")
+                st.write("- 汤类：营养汤品")
+                st.write("- 凉拌类：清爽凉菜")
+            else:
+                st.error("❌ 请输入食材清单")
+        return
+    
     col1, col2 = st.columns([2, 1])
     
     with col1:
@@ -244,10 +267,94 @@ def render_ingredient_recognition():
         else:
             st.info("👆 请上传图片识别食材")
 
-# 推荐菜品Tab - 使用真正的AI推荐
+# 推荐菜品Tab - 适配AI功能状态
 def render_recipe_recommendation():
     st.header("🍽️ 推荐菜品")
     
+    if not AI_ENABLED:
+        st.warning("⚠️ AI功能当前不可用")
+        st.info("💡 使用基础菜品推荐")
+        
+        # 手动输入食材
+        manual_ingredients = st.text_area("输入可用食材（用逗号分隔）", 
+                                         placeholder="例如：西红柿,鸡蛋,洋葱,土豆")
+        
+        if st.button("🔍 基础推荐菜品", use_container_width=True):
+            if manual_ingredients.strip():
+                ingredients_list = [ing.strip() for ing in manual_ingredients.split(",") if ing.strip()]
+                
+                # 基础推荐逻辑
+                basic_recipes = [
+                    {
+                        "name": "家常炒菜",
+                        "difficulty": "简单",
+                        "cooking_time": "15分钟",
+                        "flavor": "咸鲜",
+                        "calories": "约200大卡",
+                        "description": "简单快炒，保留食材原味",
+                        "cooking_steps": ["热锅凉油", "爆香调料", "下入食材翻炒", "调味出锅"],
+                        "tips": ["火候要足", "快速翻炒"]
+                    },
+                    {
+                        "name": "营养汤品", 
+                        "difficulty": "中等",
+                        "cooking_time": "30分钟",
+                        "flavor": "鲜美",
+                        "calories": "约150大卡",
+                        "description": "营养丰富的汤品",
+                        "cooking_steps": ["准备食材", "炖煮汤底", "加入主料", "调味出锅"],
+                        "tips": ["小火慢炖", "注意火候"]
+                    },
+                    {
+                        "name": "清爽凉拌",
+                        "difficulty": "简单", 
+                        "cooking_time": "10分钟",
+                        "flavor": "清爽",
+                        "calories": "约100大卡",
+                        "description": "夏日清爽凉菜",
+                        "cooking_steps": ["食材处理", "调制酱汁", "拌匀装盘"],
+                        "tips": ["酱汁要均匀", "冷藏后更佳"]
+                    }
+                ]
+                
+                st.session_state.recommended_recipes = basic_recipes
+                st.success(f"✅ 为您推荐了 {len(basic_recipes)} 道基础菜品")
+            else:
+                st.error("❌ 请输入食材清单")
+        
+        # 显示推荐结果
+        if st.session_state.recommended_recipes:
+            st.subheader("📋 基础菜品推荐")
+            for i, recipe in enumerate(st.session_state.recommended_recipes, 1):
+                with st.expander(f"{i}. {recipe.get('name', '未知菜品')}", expanded=i==1):
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.write(f"**难度:** {recipe.get('difficulty', '未知')}")
+                        st.write(f"**时间:** {recipe.get('cooking_time', '未知')}")
+                    
+                    with col2:
+                        st.write(f"**口味:** {recipe.get('flavor', '未知')}")
+                        st.write(f"**热量:** {recipe.get('calories', '未知')}")
+                    
+                    # 菜品描述
+                    if recipe.get('description'):
+                        st.write(f"**描述:** {recipe['description']}")
+                    
+                    # 烹饪步骤
+                    if recipe.get('cooking_steps'):
+                        st.write("**烹饪步骤:**")
+                        for j, step in enumerate(recipe['cooking_steps'], 1):
+                            st.write(f"{j}. {step}")
+                    
+                    # 烹饪技巧
+                    if 'tips' in recipe and recipe['tips']:
+                        st.write("**烹饪技巧:**")
+                        for tip in recipe['tips']:
+                            st.write(f"💡 {tip}")
+        return
+    
+    # AI功能可用时的完整逻辑
     # 获取识别的食材
     ingredient_names = [ing.get('name', '') for ing in st.session_state.recognized_ingredients]
     
