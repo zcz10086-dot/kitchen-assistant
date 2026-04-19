@@ -214,8 +214,35 @@ def render_sidebar():
         # 语音设置
         st.header("🎤 语音设置")
         enable_voice = st.checkbox("启用语音功能", value=True)
-        if enable_voice and tts_engine:
-            voice_type = st.selectbox("语音类型", tts_engine.get_available_voices())
+        if enable_voice:
+            # 语音语言选择
+            language_option = st.selectbox("语音语言", ["中文", "英文"], index=0)
+            
+            # 根据语言选择语音类型
+            if language_option == "中文":
+                chinese_voices = [
+                    "zh-CN-XiaoxiaoNeural (晓晓 - 女声)",
+                    "zh-CN-YunxiNeural (云希 - 男声)", 
+                    "zh-CN-XiaoyiNeural (晓伊 - 女声)",
+                    "zh-CN-YunyangNeural (云扬 - 男声)"
+                ]
+                voice_type = st.selectbox("中文语音类型", chinese_voices)
+                # 提取实际的语音类型
+                voice_type = voice_type.split(" ")[0]
+            else:
+                english_voices = [
+                    "alloy (合金)", "echo (回声)", "fable (寓言)", 
+                    "onyx (玛瑙)", "nova (新星)", "shimmer (闪烁)"
+                ]
+                voice_type = st.selectbox("英文语音类型", english_voices)
+                voice_type = voice_type.split(" ")[0]
+            
+            # 保存语音设置到session_state
+            st.session_state.voice_settings = {
+                'language': language_option,
+                'voice_type': voice_type,
+                'enabled': True
+            }
 
 # 食材识别Tab
 def render_ingredient_recognition():
@@ -531,10 +558,24 @@ def render_voice_assistant():
             if st.button("🎵 生成语音", use_container_width=True):
                 with st.spinner("正在生成语音..."):
                     if hasattr(voice_assistant, 'text_to_speech'):
-                        result = voice_assistant.text_to_speech(tts_text)
+                        # 使用用户选择的语音类型
+                        voice_type = st.session_state.get('voice_settings', {}).get('voice_type', 'zh-CN-XiaoxiaoNeural')
+                        result = voice_assistant.text_to_speech(tts_text, voice=voice_type)
                         
                         if result["success"]:
                             st.success("✅ 语音生成成功")
+                            # 显示语音类型信息
+                            voice_display_name = {
+                                "zh-CN-XiaoxiaoNeural": "晓晓 (中文女声)",
+                                "zh-CN-YunxiNeural": "云希 (中文男声)",
+                                "zh-CN-XiaoyiNeural": "晓伊 (中文女声)",
+                                "zh-CN-YunyangNeural": "云扬 (中文男声)",
+                                "alloy": "合金", "echo": "回声", "fable": "寓言",
+                                "onyx": "玛瑙", "nova": "新星", "shimmer": "闪烁"
+                            }.get(voice_type, voice_type)
+                            
+                            st.info(f"🎤 使用语音: {voice_display_name}")
+                            
                             # 播放音频
                             st.audio(result["audio_url"], format="audio/mpeg")
                             

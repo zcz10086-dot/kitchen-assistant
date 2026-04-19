@@ -18,7 +18,20 @@ class VoiceAssistantCloudEnhanced:
         self.client = client
         self.sample_rate = 16000
         
-    def text_to_speech(self, text: str, voice: str = "zh-CN-XiaoxiaoNeural") -> Dict[str, Any]:
+    def text_to_speech(self, text: str, voice: str = None) -> Dict[str, Any]:
+        """
+        云端TTS功能 - 完全支持中文
+        
+        Args:
+            text: 要合成的文本
+            voice: 语音类型，默认使用中文语音
+            
+        Returns:
+            包含音频数据和URL的字典
+        """
+        # 如果没有指定语音，使用默认中文语音
+        if voice is None:
+            voice = "zh-CN-XiaoxiaoNeural"
         """
         云端TTS功能 - 完全支持
         

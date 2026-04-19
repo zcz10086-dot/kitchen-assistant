@@ -147,8 +147,14 @@ class VoiceAssistant:
         return self.speak_text(text, language="zh-CN")
 
     def get_available_voices(self) -> List[str]:
-        """获取可用的语音类型"""
-        return ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+        """获取可用的语音类型（支持中文）"""
+        return [
+            "zh-CN-XiaoxiaoNeural",  # 中文女声 - 晓晓
+            "zh-CN-YunxiNeural",     # 中文男声 - 云希
+            "zh-CN-XiaoyiNeural",    # 中文女声 - 晓伊
+            "zh-CN-YunyangNeural",   # 中文男声 - 云扬
+            "alloy", "echo", "fable", "onyx", "nova", "shimmer"  # 英文语音
+        ]
     
     def recognize_chinese_commands(self, recognized_text: str) -> Dict[str, Any]:
         """识别中文语音命令"""
