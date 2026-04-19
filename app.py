@@ -7,17 +7,38 @@ import time
 import threading
 from PIL import Image
 
-# 优化后的导入方式
-from modules.zhipu_client import ZhipuClient
-from modules.image_recognition import ImageRecognition
-from modules.recommendation import RecipeRecommender
-from modules.nutrition import NutritionAnalyzer
+# 优化后的导入方式（带备用方案）
+try:
+    from modules.zhipu_client import ZhipuClient
+    zhipu_client = ZhipuClient()
+    print("使用标准zhipu客户端")
+except ImportError as e:
+    print(f"zhipuai库导入失败: {e}")
+    try:
+        from modules.zhipu_client_fallback import ZhipuClientFallback
+        zhipu_client = ZhipuClientFallback()
+        print("使用备用zhipu客户端")
+    except ImportError:
+        print("备用客户端也不可用")
+        zhipu_client = None
 
-# 初始化模块实例
-zhipu_client = ZhipuClient()
-image_recognizer = ImageRecognition()
-recipe_recommender = RecipeRecommender()
-nutrition_analyzer = NutritionAnalyzer()
+# 初始化其他模块实例
+try:
+    from modules.image_recognition import ImageRecognition
+    from modules.recommendation import RecipeRecommender
+    from modules.nutrition import NutritionAnalyzer
+    
+    image_recognizer = ImageRecognition()
+    recipe_recommender = RecipeRecommender()
+    nutrition_analyzer = NutritionAnalyzer()
+    
+    print("所有AI模块初始化成功")
+except Exception as e:
+    print(f"部分AI模块初始化失败: {e}")
+    # 设置默认值
+    image_recognizer = None
+    recipe_recommender = None
+    nutrition_analyzer = None
 
 # 音频功能依赖检查
 try:

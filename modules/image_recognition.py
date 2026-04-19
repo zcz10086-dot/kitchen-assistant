@@ -2,16 +2,38 @@ import base64
 import io
 from typing import List, Dict, Any
 from PIL import Image
-from .zhipu_client import ZhipuClient
+
+try:
+    from .zhipu_client import ZhipuClient
+    CLIENT_AVAILABLE = True
+except ImportError:
+    try:
+        from .zhipu_client_fallback import ZhipuClientFallback
+        CLIENT_AVAILABLE = True
+    except ImportError:
+        CLIENT_AVAILABLE = False
 
 class ImageRecognition:
     """食材识别模块（基于GLM-4V）"""
     
     def __init__(self):
-        self.client = ZhipuClient()
+        if CLIENT_AVAILABLE:
+            try:
+                self.client = ZhipuClient()
+            except:
+                self.client = ZhipuClientFallback()
+        else:
+            self.client = None
     
     def recognize_ingredients(self, image_data: bytes) -> Dict[str, Any]:
         """识别图片中的食材"""
+        if not self.client:
+            return {
+                "success": False,
+                "error": "AI客户端不可用",
+                "ingredients": []
+            }
+            
         try:
             # 将图片转换为base64
             image_b64 = base64.b64encode(image_data).decode('utf-8')
@@ -33,37 +55,56 @@ class ImageRecognition:
             }
             """
             
+            # 调用GLM-4V进行图像识别
             result = self.client.chat_with_image(image_url, prompt)
             
-            if result["success"]:
-                # 尝试解析JSON结果
-                try:
-                    import json
-                    return json.loads(result["data"])
-                except:
+            if "error" in result:
+                return {
+                    "success": False,
+                    "error": result["error"],
+                    "ingredients": []
+                }
+            
+            # 解析AI返回的结果
+            response_text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            # 尝试解析JSON
+            try:
+                import json
+                # 从响应文本中提取JSON部分
+                if "{" in response_text and "}" in response_text:
+                    json_start = response_text.index("{")
+                    json_end = response_text.rindex("}") + 1
+                    json_str = response_text[json_start:json_end]
+                    parsed_result = json.loads(json_str)
+                    
+                    return {
+                        "success": True,
+                        "ingredients": parsed_result.get("ingredients", []),
+                        "total_count": parsed_result.get("total_count", 0),
+                        "cooking_suggestions": parsed_result.get("cooking_suggestions", [])
+                    }
+                else:
                     # 如果无法解析JSON，返回原始文本
                     return {
-                        "ingredients": [],
+                        "success": True,
+                        "ingredients": [{"name": "无法解析AI响应", "quantity": "", "freshness": "", "confidence": 0.0}],
                         "total_count": 0,
-                        "cooking_suggestions": [result["data"]],
-                        "raw_result": result["data"]
+                        "cooking_suggestions": ["请重试或手动输入食材"]
                     }
-            else:
-                print(f"图像识别失败: {result['error']}")
+                    
+            except json.JSONDecodeError:
                 return {
-                    "ingredients": [],
-                    "total_count": 0,
-                    "cooking_suggestions": [f"图像识别失败: {result['error']}"],
-                    "raw_result": f"图像识别失败: {result['error']}"
+                    "success": False,
+                    "error": "JSON解析失败",
+                    "ingredients": []
                 }
                 
         except Exception as e:
-            print(f"图像识别异常: {str(e)}")
             return {
-                "ingredients": [],
-                "total_count": 0,
-                "cooking_suggestions": [f"图像识别异常: {str(e)}"],
-                "raw_result": f"图像识别异常: {str(e)}"
+                "success": False,
+                "error": f"识别失败: {str(e)}",
+                "ingredients": []
             }
     
     def analyze_food_safety(self, image_data: bytes) -> Dict[str, Any]:
